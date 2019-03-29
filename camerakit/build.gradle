@@ -1,4 +1,8 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+
+group='finance.empower'
+version = rootProject.ext.versionName
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -41,9 +45,6 @@ dependencies {
     implementation 'com.google.android.gms:play-services-vision:17.0.2'
 }
 
-group = 'com.wonderkiln'
-version = rootProject.ext.versionName
-
 install {
     repositories.mavenInstaller {
         pom.project {
@@ -53,21 +54,21 @@ install {
     }
 }
 
-bintray {
-    user = rootProject.ext.bintrayUser
-    key = rootProject.ext.bintrayKey
-    override = true
-    publish = true
-    configurations = ['archives']
-    pkg {
-        repo = 'snapshots'
-        name = 'CameraKit-Android'
-        userOrg = 'wonderkiln'
-        vcsUrl = 'https://github.com/wonderkiln/CameraKit-Android.git'
-        version {
-            name = rootProject.ext.versionName
-            vcsTag = rootProject.ext.versionName
-            released = new Date()
-        }
-    }
-}
+//bintray {
+//    user = rootProject.ext.bintrayUser
+//    key = rootProject.ext.bintrayKey
+//    override = true
+//    publish = true
+//    configurations = ['archives']
+//    pkg {
+//        repo = 'snapshots'
+//        name = 'CameraKit-Android'
+//        userOrg = 'wonderkiln'
+//        vcsUrl = 'https://github.com/wonderkiln/CameraKit-Android.git'
+//        version {
+//            name = rootProject.ext.versionName
+//            vcsTag = rootProject.ext.versionName
+//            released = new Date()
+//        }
+//    }
+//}
