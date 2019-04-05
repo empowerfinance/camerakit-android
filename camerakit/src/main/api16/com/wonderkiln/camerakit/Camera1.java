@@ -233,12 +233,13 @@ public class Camera1 extends CameraImpl {
             switch (focus) {
                 case FOCUS_CONTINUOUS:
                     if (mCameraParameters != null) {
-                        final List<String> modes = mCameraParameters.getSupportedFocusModes();
-                        if (modes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
-                            mCameraParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
-                        } else {
-                            setFocus(FOCUS_OFF);
-                        }
+                        mCameraParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_FIXED);
+//                        final List<String> modes = mCameraParameters.getSupportedFocusModes();
+//                        if (modes.contains(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE)) {
+//                            mCameraParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+//                        } else {
+//                            setFocus(FOCUS_OFF);
+//                        }
                     }
                     break;
 
