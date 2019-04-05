@@ -254,12 +254,14 @@ public class Camera1 extends CameraImpl {
                 case FOCUS_OFF:
                     if (mCameraParameters != null) {
                         final List<String> modes = mCameraParameters.getSupportedFocusModes();
-                        if (modes.contains(Camera.Parameters.FOCUS_MODE_FIXED)) {
-                            mCameraParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_FIXED);
-                        } else if (modes.contains(Camera.Parameters.FOCUS_MODE_INFINITY)) {
-                            mCameraParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_INFINITY);
-                        } else {
+                        if(modes.contains(Camera.Parameters.FOCUS_MODE_AUTO)){
                             mCameraParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_AUTO);
+                        }
+                        else if (modes.contains(Camera.Parameters.FOCUS_MODE_FIXED)) {
+                            mCameraParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_FIXED);
+                        }
+                        else if (modes.contains(Camera.Parameters.FOCUS_MODE_INFINITY)) {
+                            mCameraParameters.setFocusMode(Camera.Parameters.FOCUS_MODE_INFINITY);
                         }
                     }
                     break;
