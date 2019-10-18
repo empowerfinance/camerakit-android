@@ -13,8 +13,7 @@ import com.camerakit.type.CameraFacing
 import com.camerakit.type.CameraFlash
 import com.camerakit.type.CameraSize
 
-class Camera1(eventsDelegate: CameraEvents) :
-        CameraApi, CameraEvents by eventsDelegate {
+class Camera1(private val cameraEventListener: CameraEvents) : CameraApi {
 
     override val cameraHandler: CameraHandler = CameraHandler.get()
 
@@ -39,7 +38,7 @@ class Camera1(eventsDelegate: CameraEvents) :
 
                 this.camera = camera
                 this.cameraAttributes = cameraAttributes
-                onCameraOpened(cameraAttributes)
+                cameraEventListener.onCameraOpened(cameraAttributes)
             }
         }
     }
@@ -49,7 +48,7 @@ class Camera1(eventsDelegate: CameraEvents) :
         camera?.release()
         camera = null
         cameraAttributes = null
-        onCameraClosed()
+        cameraEventListener.onCameraClosed()
     }
 
     @Synchronized
@@ -82,7 +81,7 @@ class Camera1(eventsDelegate: CameraEvents) :
 
             camera.setPreviewTexture(surfaceTexture)
             camera.setOneShotPreviewCallback { _, _ ->
-                onPreviewStarted()
+                cameraEventListener.onPreviewStarted()
             }
             camera.startPreview()
         }
@@ -93,7 +92,7 @@ class Camera1(eventsDelegate: CameraEvents) :
         val camera = camera
         if (camera != null) {
             camera.stopPreview()
-            onPreviewStopped()
+            cameraEventListener.onPreviewStopped()
         }
     }
 

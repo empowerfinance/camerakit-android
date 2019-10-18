@@ -1,6 +1,6 @@
 package com.camerakit.api
 
-interface CameraApi : CameraActions, CameraEvents {
+interface CameraApi : CameraActions {
 
     val cameraHandler: CameraHandler
 

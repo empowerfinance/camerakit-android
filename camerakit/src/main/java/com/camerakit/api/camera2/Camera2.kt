@@ -7,7 +7,6 @@ import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
 import android.media.ImageReader
 import androidx.annotation.RequiresApi
-import android.util.Log
 import android.view.Surface
 import com.camerakit.api.CameraApi
 import com.camerakit.api.CameraAttributes
@@ -20,8 +19,8 @@ import com.camerakit.type.CameraSize
 
 @RequiresApi(21)
 @SuppressWarnings("MissingPermission")
-class Camera2(eventsDelegate: CameraEvents, context: Context) :
-        CameraApi, CameraEvents by eventsDelegate {
+class Camera2(private val cameraEventListener: CameraEvents, context: Context) :
+        CameraApi {
 
     override val cameraHandler: CameraHandler = CameraHandler.get()
 
@@ -53,20 +52,21 @@ class Camera2(eventsDelegate: CameraEvents, context: Context) :
                     val cameraAttributes = Attributes(cameraCharacteristics, facing)
                     this@Camera2.cameraDevice = cameraDevice
                     this@Camera2.cameraAttributes = cameraAttributes
-                    onCameraOpened(cameraAttributes)
+                    cameraEventListener.onCameraOpened(cameraAttributes)
                 }
 
                 override fun onDisconnected(cameraDevice: CameraDevice) {
                     cameraDevice.close()
                     this@Camera2.cameraDevice = null
                     this@Camera2.captureSession = null
-                    onCameraClosed()
+                    cameraEventListener.onCameraClosed()
                 }
 
                 override fun onError(cameraDevice: CameraDevice, error: Int) {
                     cameraDevice.close()
                     this@Camera2.cameraDevice = null
                     this@Camera2.captureSession = null
+                    cameraEventListener.onCameraError()
                 }
             }, cameraHandler)
         }
@@ -82,7 +82,7 @@ class Camera2(eventsDelegate: CameraEvents, context: Context) :
         imageReader?.close()
         imageReader = null
         previewStarted = false
-        onCameraClosed()
+        cameraEventListener.onCameraClosed()
     }
 
     @Synchronized
@@ -126,7 +126,7 @@ class Camera2(eventsDelegate: CameraEvents, context: Context) :
                 captureSession.close()
             } catch (e: Exception) {
             } finally {
-                onPreviewStopped()
+                cameraEventListener.onPreviewStopped()
             }
         }
         previewStarted = false
@@ -276,7 +276,7 @@ class Camera2(eventsDelegate: CameraEvents, context: Context) :
 
         override fun onCaptureCompleted(session: CameraCaptureSession, request: CaptureRequest, result: TotalCaptureResult) {
             if (!previewStarted) {
-                onPreviewStarted()
+                cameraEventListener.onPreviewStarted()
                 previewStarted = true
             }
 
