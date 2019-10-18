@@ -99,10 +99,14 @@ class CameraPreview : FrameLayout, CameraEvents {
 
         cameraSurfaceView.cameraSurfaceTextureListener = object : CameraSurfaceTextureListener {
             override fun onSurfaceReady(cameraSurfaceTexture: CameraSurfaceTexture) {
-                surfaceTexture = cameraSurfaceTexture
-                surfaceState = SurfaceState.SURFACE_AVAILABLE
-                if (lifecycleState == LifecycleState.RESUMED) {
-                    resume()
+                GlobalScope.launch(cameraDispatcher) {
+                    runBlocking {
+                        surfaceTexture = cameraSurfaceTexture
+                        surfaceState = SurfaceState.SURFACE_AVAILABLE
+                        if (lifecycleState == LifecycleState.RESUMED) {
+                            attemptToStartPreview()
+                        }
+                    }
                 }
             }
         }
@@ -124,11 +128,7 @@ class CameraPreview : FrameLayout, CameraEvents {
         GlobalScope.launch(cameraDispatcher) {
             runBlocking {
                 lifecycleState = LifecycleState.RESUMED
-                try {
-                    startPreview()
-                } catch (e: Exception) {
-                    // camera or surface not ready, wait.
-                }
+                attemptToStartPreview()
             }
         }
     }
@@ -232,6 +232,14 @@ class CameraPreview : FrameLayout, CameraEvents {
         cameraOpenContinuation = it
         cameraState = CameraState.CAMERA_OPENING
         cameraApi.open(cameraFacing)
+    }
+
+    private suspend fun attemptToStartPreview() {
+        try {
+            startPreview()
+        } catch (e: Exception) {
+            // camera or surface not ready, wait.
+        }
     }
 
     private suspend fun startPreview(): Unit = suspendCoroutine {
