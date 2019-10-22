@@ -8,8 +8,8 @@ import com.camerakit.type.CameraSize
 class ManagedCameraApi(private val delegate: CameraApi) : CameraApi by delegate {
 
     @Synchronized
-    override fun open(facing: CameraFacing) {
-        cameraHandler.run { delegate.open(facing) }
+    override fun open(facing: CameraFacing, completion: () -> Unit) {
+        cameraHandler.run { delegate.open(facing, completion) }
     }
 
     @Synchronized

@@ -7,7 +7,7 @@ import com.camerakit.type.CameraSize
 
 interface CameraActions {
 
-    fun open(facing: CameraFacing)
+    fun open(facing: CameraFacing, completion: (() -> Unit))
     fun release()
 
     fun setPreviewOrientation(degrees: Int)

@@ -21,25 +21,30 @@ class Camera1(private val cameraEventListener: CameraEvents) : CameraApi {
     private var cameraAttributes: CameraAttributes? = null
 
     @Synchronized
-    override fun open(facing: CameraFacing) {
-        val cameraId = when (facing) {
-            CameraFacing.BACK -> Camera.CameraInfo.CAMERA_FACING_BACK
-            CameraFacing.FRONT -> Camera.CameraInfo.CAMERA_FACING_FRONT
-        }
-
-        val numberOfCameras = Camera.getNumberOfCameras()
-        val cameraInfo = Camera.CameraInfo()
-        for (i in 0 until numberOfCameras) {
-            Camera.getCameraInfo(i, cameraInfo)
-            if (cameraInfo.facing == cameraId) {
-                val camera = Camera.open(i)
-                val cameraParameters = camera.parameters
-                val cameraAttributes = Attributes(cameraInfo, cameraParameters, facing)
-
-                this.camera = camera
-                this.cameraAttributes = cameraAttributes
-                cameraEventListener.onCameraOpened(cameraAttributes)
+    override fun open(facing: CameraFacing, completion: (() -> Unit)) {
+        try {
+            val cameraId = when (facing) {
+                CameraFacing.BACK -> Camera.CameraInfo.CAMERA_FACING_BACK
+                CameraFacing.FRONT -> Camera.CameraInfo.CAMERA_FACING_FRONT
             }
+
+            val numberOfCameras = Camera.getNumberOfCameras()
+            val cameraInfo = Camera.CameraInfo()
+            for (i in 0 until numberOfCameras) {
+                Camera.getCameraInfo(i, cameraInfo)
+                if (cameraInfo.facing == cameraId) {
+                    val camera = Camera.open(i)
+                    val cameraParameters = camera.parameters
+                    val cameraAttributes = Attributes(cameraInfo, cameraParameters, facing)
+
+                    this.camera = camera
+                    this.cameraAttributes = cameraAttributes
+                    cameraEventListener.onCameraOpened(cameraAttributes)
+                    break
+                }
+            }
+        } finally {
+            completion.invoke()
         }
     }
 

@@ -77,7 +77,6 @@ class CameraPreview : FrameLayout, CameraEvents {
     private val cameraSurfaceView: CameraSurfaceView = CameraSurfaceView(context)
 
     private val cameraDispatcher: CoroutineDispatcher = newSingleThreadContext("CAMERA")
-    private var cameraOpenContinuation: Continuation<Unit>? = null
     private var previewStartContinuation: Continuation<Unit>? = null
 
     @SuppressWarnings("NewApi")
@@ -177,8 +176,6 @@ class CameraPreview : FrameLayout, CameraEvents {
     override fun onCameraOpened(cameraAttributes: CameraAttributes) {
         cameraState = CameraState.CAMERA_OPENED
         attributes = cameraAttributes
-        cameraOpenContinuation?.resume(Unit)
-        cameraOpenContinuation = null
     }
 
     override fun onCameraClosed() {
@@ -229,9 +226,8 @@ class CameraPreview : FrameLayout, CameraEvents {
     // Camera control:
 
     private suspend fun openCamera(): Unit = suspendCoroutine {
-        cameraOpenContinuation = it
         cameraState = CameraState.CAMERA_OPENING
-        cameraApi.open(cameraFacing)
+        cameraApi.open(cameraFacing) { it.resume(Unit) }
     }
 
     private suspend fun attemptToStartPreview() {

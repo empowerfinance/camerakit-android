@@ -42,33 +42,55 @@ class Camera2(private val cameraEventListener: CameraEvents, context: Context) :
     private var waitingFrames: Int = 0
 
     @Synchronized
-    override fun open(facing: CameraFacing) {
+    override fun open(facing: CameraFacing, completion: (() -> Unit)) {
         cameraFacing = facing
         val cameraId = cameraManager.getCameraId(facing) ?: throw RuntimeException()
         val cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId)
-        cameraManager.whenDeviceAvailable(cameraId, cameraHandler) {
+        var cameraOpenCompletionCalled = false
+        val oneTimeCompletion = {
+            if (!cameraOpenCompletionCalled) {
+                cameraOpenCompletionCalled = true
+                completion.invoke()
+            }
+        }
+        tryOpenCameraOperation({
             cameraManager.openCamera(cameraId, object : CameraDevice.StateCallback() {
                 override fun onOpened(cameraDevice: CameraDevice) {
-                    val cameraAttributes = Attributes(cameraCharacteristics, facing)
-                    this@Camera2.cameraDevice = cameraDevice
-                    this@Camera2.cameraAttributes = cameraAttributes
-                    cameraEventListener.onCameraOpened(cameraAttributes)
+                    try {
+                        val cameraAttributes = Attributes(cameraCharacteristics, facing)
+                        this@Camera2.cameraDevice = cameraDevice
+                        this@Camera2.cameraAttributes = cameraAttributes
+                        cameraEventListener.onCameraOpened(cameraAttributes)
+                    } finally {
+                        oneTimeCompletion.invoke()
+                    }
                 }
 
                 override fun onDisconnected(cameraDevice: CameraDevice) {
-                    cameraDevice.close()
-                    this@Camera2.cameraDevice = null
-                    this@Camera2.captureSession = null
-                    cameraEventListener.onCameraClosed()
+                    try {
+                        cameraDevice.close()
+                        this@Camera2.cameraDevice = null
+                        this@Camera2.captureSession = null
+                        cameraEventListener.onCameraClosed()
+                    } finally {
+                        oneTimeCompletion.invoke()
+                    }
                 }
 
                 override fun onError(cameraDevice: CameraDevice, error: Int) {
-                    cameraDevice.close()
-                    this@Camera2.cameraDevice = null
-                    this@Camera2.captureSession = null
-                    cameraEventListener.onCameraError()
+                    try {
+                        cameraDevice.close()
+                        this@Camera2.cameraDevice = null
+                        this@Camera2.captureSession = null
+                        cameraEventListener.onCameraError()
+                    } finally {
+                        oneTimeCompletion.invoke()
+                    }
                 }
             }, cameraHandler)
+        }) {
+            cameraEventListener.onCameraError()
+            oneTimeCompletion.invoke()
         }
     }
 
@@ -150,6 +172,19 @@ class Camera2(private val cameraEventListener: CameraEvents, context: Context) :
             lockFocus()
         } else {
             captureStillPicture()
+        }
+    }
+
+    private fun tryOpenCameraOperation(operation: () -> Unit, errorHandler: () -> Unit) {
+        try {
+            operation.invoke()
+        } catch (ex: Exception) {
+            when (ex) {
+                is CameraAccessException, is SecurityException -> {
+                    errorHandler.invoke()
+                }
+                else -> throw ex
+            }
         }
     }
 
