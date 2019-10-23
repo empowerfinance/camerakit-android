@@ -12,6 +12,7 @@ import com.camerakit.api.camera1.ext.getPreviewSizes
 import com.camerakit.type.CameraFacing
 import com.camerakit.type.CameraFlash
 import com.camerakit.type.CameraSize
+import java.lang.RuntimeException
 
 class Camera1(private val cameraEventListener: CameraEvents) : CameraApi {
 
@@ -75,20 +76,26 @@ class Camera1(private val cameraEventListener: CameraEvents) : CameraApi {
     }
 
     @Synchronized
-    override fun startPreview(surfaceTexture: SurfaceTexture) {
-        val camera = camera
-        if (camera != null) {
-            val parameters = camera.parameters
-            if (parameters.supportedFocusModes != null && Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE in parameters.supportedFocusModes) {
-                parameters.focusMode = Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE
-                camera.parameters = parameters
-            }
+    override fun startPreview(surfaceTexture: SurfaceTexture, completion: () -> Unit) {
+        try {
+            val camera = camera
+            if (camera != null) {
+                val parameters = camera.parameters
+                if (parameters.supportedFocusModes != null && Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE in parameters.supportedFocusModes) {
+                    parameters.focusMode = Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE
+                    camera.parameters = parameters
+                }
 
-            camera.setPreviewTexture(surfaceTexture)
-            camera.setOneShotPreviewCallback { _, _ ->
-                cameraEventListener.onPreviewStarted()
+                camera.setPreviewTexture(surfaceTexture)
+                try {
+                    camera.startPreview()
+                    cameraEventListener.onPreviewStarted()
+                } catch (ex: RuntimeException) {
+                    cameraEventListener.onPreviewError()
+                }
             }
-            camera.startPreview()
+        } finally {
+            completion.invoke()
         }
     }
 

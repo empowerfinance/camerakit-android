@@ -27,8 +27,8 @@ class ManagedCameraApi(private val delegate: CameraApi) : CameraApi by delegate 
     }
 
     @Synchronized
-    override fun startPreview(surfaceTexture: SurfaceTexture) {
-        cameraHandler.run { delegate.startPreview(surfaceTexture) }
+    override fun startPreview(surfaceTexture: SurfaceTexture, completion: () -> Unit) {
+        cameraHandler.run { delegate.startPreview(surfaceTexture, completion) }
     }
 
     @Synchronized

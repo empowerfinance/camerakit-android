@@ -12,7 +12,7 @@ interface CameraActions {
 
     fun setPreviewOrientation(degrees: Int)
     fun setPreviewSize(size: CameraSize)
-    fun startPreview(surfaceTexture: SurfaceTexture)
+    fun startPreview(surfaceTexture: SurfaceTexture, completion: (() -> Unit))
     fun stopPreview()
 
     fun setFlash(flash: CameraFlash)

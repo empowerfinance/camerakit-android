@@ -77,7 +77,6 @@ class CameraPreview : FrameLayout, CameraEvents {
     private val cameraSurfaceView: CameraSurfaceView = CameraSurfaceView(context)
 
     private val cameraDispatcher: CoroutineDispatcher = newSingleThreadContext("CAMERA")
-    private var previewStartContinuation: Continuation<Unit>? = null
 
     @SuppressWarnings("NewApi")
     private val cameraApi: CameraApi = ManagedCameraApi(
@@ -187,8 +186,6 @@ class CameraPreview : FrameLayout, CameraEvents {
 
     override fun onPreviewStarted() {
         cameraState = CameraState.PREVIEW_STARTED
-        previewStartContinuation?.resume(Unit)
-        previewStartContinuation = null
     }
 
     override fun onPreviewStopped() {
@@ -239,7 +236,6 @@ class CameraPreview : FrameLayout, CameraEvents {
     }
 
     private suspend fun startPreview(): Unit = suspendCoroutine {
-        previewStartContinuation = it
         val surfaceTexture = surfaceTexture
         val attributes = attributes
         if (surfaceTexture != null && attributes != null) {
@@ -280,10 +276,9 @@ class CameraPreview : FrameLayout, CameraEvents {
             cameraApi.setPreviewOrientation(previewOrientation)
             cameraApi.setPreviewSize(previewSize)
             cameraApi.setPhotoSize(photoSize)
-            cameraApi.startPreview(surfaceTexture)
+            cameraApi.startPreview(surfaceTexture) { it.resume(Unit) }
         } else {
             it.resumeWithException(IllegalStateException())
-            previewStartContinuation = null
         }
     }
 

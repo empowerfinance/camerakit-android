@@ -16,6 +16,7 @@ import com.camerakit.api.camera2.ext.*
 import com.camerakit.type.CameraFacing
 import com.camerakit.type.CameraFlash
 import com.camerakit.type.CameraSize
+import java.lang.IllegalStateException
 
 @RequiresApi(21)
 @SuppressWarnings("MissingPermission")
@@ -116,24 +117,35 @@ class Camera2(private val cameraEventListener: CameraEvents, context: Context) :
     }
 
     @Synchronized
-    override fun startPreview(surfaceTexture: SurfaceTexture) {
-        val cameraDevice = cameraDevice
-        val imageReader = imageReader
-        if (cameraDevice != null && imageReader != null) {
-            val surface = Surface(surfaceTexture)
-            cameraDevice.getCaptureSession(surface, imageReader, cameraHandler) { captureSession ->
-                this.captureSession = captureSession
+    override fun startPreview(surfaceTexture: SurfaceTexture, completion: () -> Unit) {
+        try {
+            val cameraDevice = cameraDevice
+            val imageReader = imageReader
+            if (cameraDevice != null && imageReader != null) {
+                val surface = Surface(surfaceTexture)
+                cameraDevice.getCaptureSession(surface, imageReader, cameraHandler) { captureSession ->
+                    this.captureSession = captureSession
 
-                if (captureSession != null) {
-                    val previewRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
-                    previewRequestBuilder.addTarget(surface)
-                    previewRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)
-                    previewRequestBuilder.set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO)
+                    if (captureSession != null) {
+                        val previewRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
+                        previewRequestBuilder.addTarget(surface)
+                        previewRequestBuilder.set(
+                            CaptureRequest.CONTROL_AF_MODE,
+                            CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE
+                        )
+                        previewRequestBuilder.set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO)
 
-                    captureSession.setRepeatingRequest(previewRequestBuilder.build(), captureCallback, cameraHandler)
-                    this.previewRequestBuilder = previewRequestBuilder
+                        captureSession.setRepeatingRequest(
+                            previewRequestBuilder.build(),
+                            captureCallback,
+                            cameraHandler
+                        )
+                        this.previewRequestBuilder = previewRequestBuilder
+                    }
                 }
             }
+        } finally {
+            completion.invoke()
         }
     }
 
